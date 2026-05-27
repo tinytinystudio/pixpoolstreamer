@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anúncio - Equipamentos Eletrônicos</title>
+
+  <style>
+    :root {
+      --stage-w: 1920px;
+      --stage-h: 1080px;
+      --bg-1: #07111f;
+      --bg-2: #102a43;
+      --cyan: #35d7ff;
+      --blue: #4f8cff;
+      --white: #ffffff;
+      --muted: rgba(255, 255, 255, 0.72);
+      --glass-border: rgba(255, 255, 255, 0.22);
+      --shadow: 0 32px 90px rgba(0, 0, 0, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #050b14;
+      color: var(--white);
+    }
+
+    body {
+      position: relative;
+    }
+
+    .screen {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: var(--stage-w);
+      height: var(--stage-h);
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(53, 215, 255, 0.25), transparent 28%),
+        radial-gradient(circle at 80% 70%, rgba(79, 140, 255, 0.28), transparent 30%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2));
+      transform: translate(-50%, -50%) scale(var(--stage-scale, 1));
+      transform-origin: center center;
+    }
+
+    .screen::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px);
+      background-size: 70px 70px;
+      mask-image: radial-gradient(circle at center, black 35%, transparent 80%);
+      opacity: 0.45;
+    }
+
+    .orb {
+      position: absolute;
+      width: 340px;
+      height: 340px;
+      border-radius: 999px;
+      filter: blur(10px);
+      opacity: .25;
+      animation: floatOrb 9s ease-in-out infinite alternate;
+    }
+
+    .orb.one {
+      left: -80px;
+      top: 120px;
+      background: var(--cyan);
+    }
+
+    .orb.two {
+      right: -70px;
+      bottom: 50px;
+      background: var(--blue);
+      animation-delay: -3s;
+    }
+
+    @keyframes floatOrb {
+      from { transform: translate3d(0, 0, 0) scale(1); }
+      to { transform: translate3d(40px, -30px, 0) scale(1.15); }
+    }
+
+    .layout {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 900px 780px;
+      width: 100%;
+      height: 100%;
+      padding: 86px 96px 92px;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .copy {
+      min-height: 760px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-right: 32px;
+    }
+
+    .tag {
+      width: fit-content;
+      font-size: 28px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: #08111f;
+      font-weight: 900;
+      padding: 16px 24px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--cyan), #9ef1ff);
+      box-shadow: 0 16px 38px rgba(53, 215, 255, .28);
+      margin-bottom: 44px;
+    }
+
+    h1 {
+      font-size: 132px;
+      line-height: .88;
+      letter-spacing: -0.07em;
+      max-width: 760px;
+      text-transform: uppercase;
+      text-shadow: 0 18px 52px rgba(0, 0, 0, .36);
+    }
+
+    .animated-word {
+      display: inline-block;
+      color: var(--cyan);
+      min-width: 7ch;
+      filter: drop-shadow(0 0 22px rgba(53, 215, 255, .52));
+      animation: wordPulse .8s ease both;
+    }
+
+    @keyframes wordPulse {
+      0% { opacity: 0; transform: translateY(22px) scale(.96); filter: blur(8px); }
+      100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0) drop-shadow(0 0 22px rgba(53, 215, 255, .52)); }
+    }
+
+    .description {
+      max-width: 760px;
+      margin-top: 44px;
+      font-size: 34px;
+      line-height: 1.22;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .cta-row {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      margin-top: 58px;
+    }
+
+    .cta {
+      font-size: 30px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: 22px 30px;
+      border-radius: 24px;
+      color: #06111f;
+      background: #ffffff;
+      box-shadow: 0 18px 48px rgba(255, 255, 255, .18);
+      white-space: nowrap;
+    }
+
+    .signal {
+      font-size: 23px;
+      line-height: 1.22;
+      color: var(--muted);
+      max-width: 330px;
+    }
+
+    .gallery-wrap {
+      position: relative;
+      height: 880px;
+      display: grid;
+      place-items: center;
+      perspective: 1600px;
+    }
+
+    .gallery {
+      position: relative;
+      width: 720px;
+      height: 790px;
+    }
+
+    .card {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-rows: 530px 260px;
+      border: 1px solid var(--glass-border);
+      border-radius: 54px;
+      overflow: hidden;
+      background: linear-gradient(145deg, rgba(255,255,255,.18), rgba(255,255,255,.07));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(26px);
+      opacity: 0;
+      transform: translateX(90px) rotateY(-18deg) scale(.88);
+      transition: opacity .75s ease, transform .75s cubic-bezier(.2,.9,.2,1), filter .75s ease;
+      filter: blur(10px);
+    }
+
+    .card.active {
+      opacity: 1;
+      transform: translateX(0) rotateY(0) scale(1);
+      filter: blur(0);
+      z-index: 5;
+    }
+
+    .card.previous {
+      opacity: .22;
+      transform: translateX(-52px) translateY(34px) rotateY(15deg) scale(.86);
+      filter: blur(3px);
+      z-index: 2;
+    }
+
+    .card.next {
+      opacity: .28;
+      transform: translateX(52px) translateY(-28px) rotateY(-15deg) scale(.88);
+      filter: blur(3px);
+      z-index: 3;
+    }
+
+    .product-art {
+      display: grid;
+      place-items: center;
+      padding: 52px 56px;
+      background:
+        radial-gradient(circle at 50% 55%, rgba(255,255,255,.22), transparent 35%),
+        linear-gradient(145deg, rgba(53,215,255,.16), rgba(79,140,255,.06));
+    }
+
+    .product-art svg {
+      width: 86%;
+      height: 86%;
+      overflow: visible;
+      filter: drop-shadow(0 30px 35px rgba(0,0,0,.42));
+      animation: productFloat 3.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes productFloat {
+      from { transform: translateY(0) rotate(-1deg); }
+      to { transform: translateY(-16px) rotate(1deg); }
+    }
+
+    .card-info {
+      padding: 42px 44px;
+      background: rgba(3, 12, 24, .52);
+      border-top: 1px solid rgba(255,255,255,.16);
+    }
+
+    .card-info h2 {
+      font-size: 50px;
+      line-height: .95;
+      letter-spacing: -0.04em;
+      margin-bottom: 18px;
+    }
+
+    .card-info p {
+      font-size: 25px;
+      line-height: 1.22;
+      color: var(--muted);
+    }
+
+    .dots {
+      position: absolute;
+      bottom: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.32);
+      transition: width .45s ease, background .45s ease;
+    }
+
+    .dot.active {
+      width: 46px;
+      background: var(--cyan);
+      box-shadow: 0 0 24px rgba(53, 215, 255, .75);
+    }
+
+    .shine {
+      position: absolute;
+      inset: -40%;
+      background: linear-gradient(120deg, transparent 40%, rgba(255,255,255,.18), transparent 60%);
+      transform: translateX(-50%);
+      animation: shine 4s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 8;
+    }
+
+    @keyframes shine {
+      0%, 30% { transform: translateX(-55%) rotate(8deg); }
+      65%, 100% { transform: translateX(55%) rotate(8deg); }
+    }
+
+    .footer-line {
+      position: absolute;
+      left: 96px;
+      right: 96px;
+      bottom: 34px;
+      z-index: 5;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: rgba(255,255,255,.58);
+      font-size: 19px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <main class="screen">
+    <div class="orb one"></div>
+    <div class="orb two"></div>
+
+    <section class="layout">
+      <div class="copy">
+        <div class="tag">Oferta Tech</div>
+        <h1>
+          Tecnologia<br />
+          <span class="animated-word" id="animatedWord">Smart</span>
+        </h1>
+        <p class="description">
+          Equipamentos eletrônicos modernos para casa, trabalho e entretenimento.
+          Alta performance, design premium e preços especiais por tempo limitado.
+        </p>
+
+        <div class="cta-row">
+          <div class="cta">Confira agora</div>
+          <div class="signal">Produtos selecionados com garantia e entrega rápida.</div>
+        </div>
+      </div>
+
+      <div class="gallery-wrap" aria-label="Galeria de equipamentos eletrônicos">
+        <div class="gallery" id="gallery">
+          <article class="card active">
+            <div class="shine"></div>
+            <div class="product-art">
+              <svg viewBox="0 0 420 320" role="img" aria-label="Notebook mockup">
+                <defs>
+                  <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
+                    <stop stop-color="#eaf8ff"/>
+                    <stop offset="1" stop-color="#74d9ff"/>
+                  </linearGradient>
+                </defs>
+                <rect x="82" y="42" width="256" height="168" rx="18" fill="#101828"/>
+                <rect x="102" y="62" width="216" height="128" rx="9" fill="url(#g1)"/>
+                <path d="M48 224h324l34 42c4 5 0 12-7 12H21c-7 0-11-8-6-13l33-41Z" fill="#d7e7f3"/>
+                <path d="M170 238h80l10 16H160l10-16Z" fill="#8398aa" opacity=".7"/>
+                <circle cx="210" cy="126" r="33" fill="#102a43" opacity=".18"/>
+                <path d="M196 126h28M210 112v28" stroke="#102a43" stroke-width="8" stroke-linecap="round" opacity=".34"/>
+              </svg>
+            </div>
+            <div class="card-info">
+              <h2>Notebook Pro</h2>
+              <p>Performance para produtividade, estudos, edição e multitarefas.</p>
+            </div>
+          </article>
+
+          <article class="card next">
+            <div class="shine"></div>
+            <div class="product-art">
+              <svg viewBox="0 0 420 320" role="img" aria-label="Smartphone mockup">
+                <defs>
+                  <linearGradient id="g2" x1="0" x2="1" y1="0" y2="1">
+                    <stop stop-color="#ffffff"/>
+                    <stop offset="1" stop-color="#69dcff"/>
+                  </linearGradient>
+                </defs>
+                <rect x="132" y="24" width="156" height="272" rx="34" fill="#0b1220"/>
+                <rect x="148" y="48" width="124" height="224" rx="23" fill="url(#g2)"/>
+                <circle cx="210" cy="61" r="5" fill="#0b1220" opacity=".65"/>
+                <rect x="174" y="92" width="72" height="72" rx="22" fill="#102a43" opacity=".16"/>
+                <rect x="168" y="188" width="84" height="13" rx="6" fill="#102a43" opacity=".22"/>
+                <rect x="184" y="212" width="52" height="11" rx="6" fill="#102a43" opacity=".18"/>
+              </svg>
+            </div>
+            <div class="card-info">
+              <h2>Smartphone 5G</h2>
+              <p>Câmera avançada, tela vibrante e conexão ultrarrápida.</p>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="shine"></div>
+            <div class="product-art">
+              <svg viewBox="0 0 420 320" role="img" aria-label="Fone de ouvido mockup">
+                <defs>
+                  <linearGradient id="g3" x1="0" x2="1" y1="0" y2="1">
+                    <stop stop-color="#f8fbff"/>
+                    <stop offset="1" stop-color="#7be4ff"/>
+                  </linearGradient>
+                </defs>
+                <path d="M126 150c0-58 35-101 84-101s84 43 84 101" fill="none" stroke="url(#g3)" stroke-width="28" stroke-linecap="round"/>
+                <rect x="82" y="142" width="72" height="108" rx="26" fill="#101828"/>
+                <rect x="266" y="142" width="72" height="108" rx="26" fill="#101828"/>
+                <rect x="102" y="160" width="35" height="72" rx="16" fill="url(#g3)"/>
+                <rect x="283" y="160" width="35" height="72" rx="16" fill="url(#g3)"/>
+                <path d="M158 260c29 21 75 21 104 0" stroke="#69dcff" stroke-width="12" stroke-linecap="round" opacity=".65"/>
+              </svg>
+            </div>
+            <div class="card-info">
+              <h2>Headset Max</h2>
+              <p>Som imersivo, cancelamento de ruído e conforto prolongado.</p>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="shine"></div>
+            <div class="product-art">
+              <svg viewBox="0 0 420 320" role="img" aria-label="Smartwatch mockup">
+                <defs>
+                  <linearGradient id="g4" x1="0" x2="1" y1="0" y2="1">
+                    <stop stop-color="#ffffff"/>
+                    <stop offset="1" stop-color="#8cecff"/>
+                  </linearGradient>
+                </defs>
+                <rect x="176" y="20" width="68" height="80" rx="22" fill="#d6e6ef"/>
+                <rect x="176" y="220" width="68" height="80" rx="22" fill="#d6e6ef"/>
+                <rect x="128" y="82" width="164" height="156" rx="42" fill="#101828"/>
+                <rect x="148" y="102" width="124" height="116" rx="30" fill="url(#g4)"/>
+                <path d="M177 170l25-42 24 30 17-20" fill="none" stroke="#102a43" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" opacity=".34"/>
+                <circle cx="253" cy="160" r="7" fill="#102a43" opacity=".28"/>
+              </svg>
+            </div>
+            <div class="card-info">
+              <h2>Smartwatch Fit</h2>
+              <p>Monitore saúde, treinos, chamadas e notificações no pulso.</p>
+            </div>
+          </article>
+
+          <article class="card previous">
+            <div class="shine"></div>
+            <div class="product-art">
+              <svg viewBox="0 0 420 320" role="img" aria-label="Caixa de som mockup">
+                <defs>
+                  <linearGradient id="g5" x1="0" x2="1" y1="0" y2="1">
+                    <stop stop-color="#111827"/>
+                    <stop offset="1" stop-color="#2d7cff"/>
+                  </linearGradient>
+                </defs>
+                <rect x="78" y="72" width="264" height="186" rx="44" fill="url(#g5)"/>
+                <circle cx="162" cy="165" r="56" fill="#07111f" opacity=".86"/>
+                <circle cx="162" cy="165" r="28" fill="#67ddff" opacity=".9"/>
+                <circle cx="258" cy="165" r="44" fill="#07111f" opacity=".76"/>
+                <circle cx="258" cy="165" r="19" fill="#ffffff" opacity=".82"/>
+                <rect x="153" y="49" width="114" height="22" rx="11" fill="#d7e7f3"/>
+                <path d="M112 272h196" stroke="#69dcff" stroke-width="10" stroke-linecap="round" opacity=".5"/>
+              </svg>
+            </div>
+            <div class="card-info">
+              <h2>Speaker Boom</h2>
+              <p>Potência sonora, graves intensos e bateria para o dia todo.</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="dots" id="dots" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <div class="footer-line">
+      <span>Eletrônicos • Acessórios • Informática</span>
+      <span>Formato 16:9 • Tela cheia</span>
+    </div>
+  </main>
+
+  <script>
+    function fitStageToScreen() {
+      const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+      document.documentElement.style.setProperty("--stage-scale", scale);
+    }
+
+    window.addEventListener("resize", fitStageToScreen);
+    window.addEventListener("orientationchange", fitStageToScreen);
+    fitStageToScreen();
+
+    const words = ["Smart", "Rápida", "Premium", "Potente", "Conectada"];
+    const wordEl = document.getElementById("animatedWord");
+    let wordIndex = 0;
+
+    setInterval(() => {
+      wordIndex = (wordIndex + 1) % words.length;
+      wordEl.style.animation = "none";
+      void wordEl.offsetWidth;
+      wordEl.textContent = words[wordIndex];
+      wordEl.style.animation = "wordPulse .8s ease both";
+    }, 1800);
+
+    const cards = Array.from(document.querySelectorAll(".card"));
+    const dotsContainer = document.getElementById("dots");
+    let current = 0;
+
+    cards.forEach((_, index) => {
+      const dot = document.createElement("span");
+      dot.className = `dot ${index === 0 ? "active" : ""}`;
+      dotsContainer.appendChild(dot);
+    });
+
+    const dots = Array.from(document.querySelectorAll(".dot"));
+
+    function renderGallery() {
+      cards.forEach((card, index) => {
+        card.classList.remove("active", "previous", "next");
+
+        const previous = (current - 1 + cards.length) % cards.length;
+        const next = (current + 1) % cards.length;
+
+        if (index === current) card.classList.add("active");
+        if (index === previous) card.classList.add("previous");
+        if (index === next) card.classList.add("next");
+      });
+
+      dots.forEach((dot, index) => {
+        dot.classList.toggle("active", index === current);
+      });
+    }
+
+    setInterval(() => {
+      current = (current + 1) % cards.length;
+      renderGallery();
+    }, 3600);
+  </script>
+</body>
+</html>
