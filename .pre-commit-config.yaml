@@ -1,0 +1,6 @@
+repos:
+  - repo: local
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=51200"]
+        stages: [pre-commit]
