@@ -15,7 +15,7 @@
       overflow: hidden;
     }
     
-    img {
+    #video_container {
       position: fixed;
       inset: 0;
       width: 100vw;
@@ -35,11 +35,9 @@
   </style>
 </head>
 <body>
-  <img src="assets/lauro_2.webp" >
-    <section class="copy">
-    <h1>Café fresco o dia inteiro</h1>
-    <p>Uma pausa mais cremosa para sua equipe e seus clientes.</p>
-  </section>
+  
+  <img id="video_container" src="assets/lauro.webp" >
+
   <script>
     const PROTOCOL = "iframeplayer.v1";
     let adId = null;
