@@ -15,19 +15,17 @@
       overflow: hidden;
     }
 
-
-    #video_container {
-      position: absolute;
+    video {
+      position: fixed;
       inset: 0;
       width: 100vw;
-      height: 100vh;      
+      height: 100vh;
       object-fit: cover;
-      opacity: .9;
+      background: black;
     }
-
   </style>
 </head>
 <body>
-   <img id="video_container" src="assets/lauro.webp" alt="Café animado"> 
+  <video src="assets/lauro.webp" autoplay="" muted="" loop="" playsinline=""></video>
 </body>
 </html>
