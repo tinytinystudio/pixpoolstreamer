@@ -26,6 +26,36 @@
   </style>
 </head>
 <body>
-  <video src="assets/lauro.webp" autoplay="" muted="" loop="" playsinline=""></video>
+  <img src="assets/lauro_2.webp" >
+    <section class="copy">
+    <h1>Café fresco o dia inteiro</h1>
+    <p>Uma pausa mais cremosa para sua equipe e seus clientes.</p>
+  </section>
+  <script>
+    const PROTOCOL = "iframeplayer.v1";
+    let adId = null;
+    const media = document.querySelector("img");
+    function send(type, payload = {}) {
+      parent.postMessage({ protocol: PROTOCOL, type, adId, payload }, "*");
+    }
+    function ready() {
+      if (adId) send("ready");
+    }
+    media.addEventListener("load", ready, { once: true });
+    window.addEventListener("message", (event) => {
+      const message = event.data;
+      if (!message || message.protocol !== PROTOCOL) return;
+      if (message.type === "init") {
+        adId = message.adId;
+        if (media.complete) ready();
+      }
+      if (message.type === "play") {
+        document.body.classList.add("playing");
+        send("started");
+      }
+      if (message.type === "stop") document.body.classList.remove("playing");
+    });
+  </script>
 </body>
+
 </html>
