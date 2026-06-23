@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iframe Player</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050608;
+      --fg: #f5f7fb;
+      --muted: rgba(245, 247, 251, .72);
+      --accent: #29d391;
+      --danger: #ff5a67;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    #stage {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+    }
+
+    .ad-frame {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: var(--bg);
+      opacity: 0;
+      transform: translate3d(0, 0, 0);
+      transition: opacity 520ms ease, transform 620ms cubic-bezier(.2, .8, .2, 1);
+      pointer-events: none;
+    }
+
+    .ad-frame.is-active {
+      opacity: 1;
+      pointer-events: auto;
+      z-index: 2;
+    }
+
+    .ad-frame.is-preload {
+      z-index: 1;
+    }
+
+    .ad-frame.enter-slide_up {
+      transform: translate3d(0, 100%, 0);
+    }
+
+    .ad-frame.enter-slide_down {
+      transform: translate3d(0, -100%, 0);
+    }
+
+    .ad-frame.enter-fade {
+      opacity: 0;
+    }
+
+    .ad-frame.is-active.enter-slide_up,
+    .ad-frame.is-active.enter-slide_down {
+      transform: translate3d(0, 0, 0);
+    }
+
+    #hud {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 220px;
+      padding: 10px 12px;
+      color: var(--fg);
+      background: rgba(5, 6, 8, .62);
+      border: 1px solid rgba(255, 255, 255, .16);
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    #status-dot {
+      width: 9px;
+      height: 9px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 18px var(--accent);
+    }
+
+    #status-dot.is-error {
+      background: var(--danger);
+      box-shadow: 0 0 18px var(--danger);
+    }
+
+    #status-text {
+      min-width: 0;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+</head>
+<body>
+  <main id="stage" aria-label="Player de anúncios"></main>
+  <aside id="hud" aria-live="polite">
+    <span id="status-dot"></span>
+    <span id="status-text">Inicializando playlist</span>
+    <span id="status-index">index</span>    
+  </aside>
+
+
+  <script>
+    const PROTOCOL = "iframeplayer.v1";
+    const READY_TIMEOUT_MS = 1500;
+    const playlist = [    
+      {
+        url_to_load: "exemplos/video-webp-cafe.html",
+        await_time: 5,
+        transition_name: "slide_up"
+      },      
+      {
+        url_to_load: "exemplos/animado-evento.html",
+        await_time: 5,
+        transition_name: "slide_down"
+      },
+    ];
+
+    const stage = document.querySelector("#stage");
+    const statusDot = document.querySelector("#status-dot");
+    const statusText = document.querySelector("#status-text");
+    const statusIndex = document.querySelector("#status-index");
+    let activeSlot = null;
+    let preloadSlot = null;
+    let activeIndex = -1;
+    let displayTimer = 0;
+    let readyTimer = 0;
+
+    function setStatus(text, error = false) {
+      statusText.textContent = text;
+      statusDot.classList.toggle("is-error", error);
+    }
+
+    function createSlot(index) {
+
+      const ad = playlist[index];
+      const iframe = document.createElement("iframe");
+      const adId = `ad-${index}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      iframe.className = "ad-frame is-preload";
+      iframe.dataset.adId = adId;
+      iframe.dataset.index = String(index);
+      iframe.dataset.ready = "false";
+      iframe.allow = "fullscreen";
+      iframe.referrerPolicy = "no-referrer-when-downgrade";
+      iframe.src = ad.url_to_load;
+
+      stage.appendChild(iframe);
+
+      iframe.addEventListener("load", () => {
+        postToSlot({ type: "init", slot: { iframe, adId, index, ad } });
+      
+      }, { once: true });
+
+      return { iframe, adId, index, ad, ready: false };
+    }
+
+    function postToSlot({ type, slot, payload = {} }) {
+
+      if (!slot?.iframe?.contentWindow) return;
+      
+      slot.iframe.contentWindow.postMessage({
+        protocol: PROTOCOL,
+        type,
+        adId: slot.adId,
+        payload: {
+          index: slot.index,
+          awaitTime: slot.ad.await_time,
+          transitionName: slot.ad.transition_name,
+          ...payload
+        }
+      }, "*");
+    }
+
+    function nextIndex(fromIndex) {
+      return (fromIndex + 1) % playlist.length;
+    }
+
+    function preload(index) {
+      preloadSlot = createSlot(index);
+      setStatus(`Pré-carregando ${index + 1}/${playlist.length}`);
+      return preloadSlot;
+    }
+
+    function activate(slot) {
+      window.clearTimeout(displayTimer);
+      window.clearTimeout(readyTimer);
+      const previous = activeSlot;
+      activeSlot = slot;
+      activeIndex = slot.index;
+      preloadSlot = null;
+
+      slot.iframe.className = `ad-frame is-preload enter-${slot.ad.transition_name || "fade"}`;
+      slot.iframe.getBoundingClientRect();
+      slot.iframe.classList.remove("is-preload");
+      slot.iframe.classList.add("is-active");
+
+      if (previous) {
+        postToSlot({ type: "stop", slot: previous });
+        previous.iframe.classList.remove("is-active");
+        window.setTimeout(() => previous.iframe.remove(), 700);
+      }
+
+      postToSlot({ type: "play", slot });
+      setStatus(`Exibindo ${slot.index + 1}/${playlist.length}`);
+
+      displayTimer = window.setTimeout(() => {
+        advance();
+      }, Math.max(1, Number(slot.ad.await_time || 1)) * 1000);
+
+      preload(nextIndex(slot.index));
+    }
+
+    function waitForReadyOrTimeout(slot) {
+      if (slot.ready) {
+        activate(slot);
+        return;
+      }
+      setStatus(`Aguardando anúncio ${slot.index + 1}/${playlist.length}`);
+      readyTimer = window.setTimeout(() => {
+        setStatus(`Timeout no anúncio ${slot.index + 1}; avançando`, true);
+        activate(slot);
+      }, READY_TIMEOUT_MS);
+    }
+
+    function advance() {
+      const slot = preloadSlot || preload(nextIndex(activeIndex));
+      waitForReadyOrTimeout(slot);
+    }
+
+    function handleMessage(event) {
+      const message = event.data;
+      if (!message || message.protocol !== PROTOCOL || !message.adId) return;
+
+      const slot = [activeSlot, preloadSlot].find((candidate) => candidate?.adId === message.adId);
+      if (!slot) return;
+
+      if (message.type === "ready") {
+        slot.ready = true;
+        slot.iframe.dataset.ready = "true";
+        if (slot === preloadSlot && !activeSlot) {
+          activate(slot);
+        }
+        return;
+      }
+
+      if (message.type === "started" && slot === activeSlot) {
+        setStatus(`Reproduzindo ${slot.index + 1}/${playlist.length}`);
+        return;
+      }
+
+      if (message.type === "complete" && slot === activeSlot) {
+        advance();
+        return;
+      }
+
+      if (message.type === "error" && slot === activeSlot) {
+        setStatus(`Erro no anúncio ${slot.index + 1}; pulando`, true);
+        advance();
+      }
+    }
+
+    window.addEventListener("message", handleMessage);
+
+    if (playlist.length === 0) {
+      setStatus("Playlist vazia", true);
+    } else {
+      waitForReadyOrTimeout(preload(0));
+    }
+  </script>
+</body>
+</html>
