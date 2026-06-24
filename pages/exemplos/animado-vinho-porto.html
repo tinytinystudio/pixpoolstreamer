@@ -254,6 +254,7 @@
     function send(type, payload = {}) {
       parent.postMessage({ protocol: PROTOCOL, type, adId, payload }, "*");
     }
+
     window.addEventListener("message", (event) => {
       const message = event.data;
       if (!message || message.protocol !== PROTOCOL) return;
@@ -269,6 +270,9 @@
         document.body.classList.remove("playing");
       }
     });
+
+    document.body.classList.add("playing");
+    requestAnimationFrame(() => send("ready"));
   </script>
 </body>
 </html>

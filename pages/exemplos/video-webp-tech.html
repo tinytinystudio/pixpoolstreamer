@@ -81,6 +81,8 @@
       }
       if (message.type === "stop") document.body.classList.remove("playing");
     });
+    document.body.classList.add("playing");
+    requestAnimationFrame(() => send("ready"));
   </script>
 </body>
 </html>
