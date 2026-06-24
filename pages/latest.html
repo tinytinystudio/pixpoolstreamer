@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anúncio WebP Tech</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body {
+      display: grid;
+      place-items: center;
+      color: #f7fbff;
+      background: #07090d;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    video {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: black;
+    }
+    .panel {
+      position: relative;
+      z-index: 1;
+      width: min(88vw, 1100px);
+      display: grid;
+      justify-items: end;
+      text-align: right;
+      opacity: 0;
+      transform: translateX(36px);
+      text-shadow: 0 10px 34px rgba(0, 0, 0, .55);
+    }
+    h1 {
+      max-width: 760px;
+      margin: 0;
+      font-size: clamp(54px, 7.8vw, 116px);
+      line-height: .9;
+      letter-spacing: 0;
+    }
+    p {
+      max-width: 580px;
+      margin: 24px 0 0;
+      font-size: clamp(22px, 2.3vw, 34px);
+      line-height: 1.2;
+    }
+    body.playing .panel { animation: in 820ms ease forwards; }
+    @keyframes in { to { opacity: 1; transform: translateX(0); } }
+  </style>
+</head>
+<body>
+
+   <video width="100%" height="100%"
+    autoplay
+    muted
+    loop
+    playsinline
+   >
+      <source src="exemplos/assets/latest.mp4" type="video/mp4" />
+   </video>
+  <script>
+    const PROTOCOL = "iframeplayer.v1";
+    let adId = null;
+    const media = document.querySelector("video");
+    function send(type, payload = {}) {
+      parent.postMessage({ protocol: PROTOCOL, type, adId, payload }, "*");
+    }
+    function ready() {
+      if (adId) send("ready");
+    }
+
+      window.addEventListener("DOMContentLoaded", async () => {
+    try {
+      await media.play();
+      document.body.classList.add("playing");
+    } catch (err) {
+      console.warn("Autoplay blocked:", err);
+    }
+  });
+
+
+    media.addEventListener("load", ready, { once: true });
+    media.addEventListener("loadeddata", ready, { once: true });
+    
+    window.addEventListener("message", (event) => {
+      const message = event.data;
+      if (!message || message.protocol !== PROTOCOL) return;
+      if (message.type === "init") {
+        adId = message.adId;
+        if (media.complete) ready();
+      }
+      if (message.type === "play") {
+        document.body.classList.add("playing");
+        send("started");
+      }
+      if (message.type === "stop") document.body.classList.remove("playing");
+    });
+  </script>
+</body>
+</html>
